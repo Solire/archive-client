@@ -220,11 +220,12 @@ class Client
      * @param array $data Tableau associatif de données du client
      *
      * @return void
+     * @todo revoir l'édition du mot de passe
      */
     public function update(array $data)
     {
         $query = 'DESC ' . $this->config('table', 'client') . ';';
-        $archi = $this->db->query($query)->fetchAll(PDO::FETCH_COLUMN, 0);
+        $archi = $this->db->query($query)->fetchAll(\PDO::FETCH_COLUMN, 0);
 
         $set = array();
         foreach ($data as $key => $value) {
@@ -237,17 +238,16 @@ class Client
         }
 
         if (empty($set)) {
-            throw new Exception($this->config('updateClientNoData', 'erreur'));
+            throw new Exception($this->config('erreur', 'updateClientNoData'));
         }
 
         $update = 'UPDATE ' . $this->config('table', 'client') . ' '
                 . 'SET ' . implode(', ', $set) . ' '
                 . 'WHERE id = ' . $this->id ;
-
         try {
             $this->db->exec($update);
         } catch (\PDOException $exc) {
-            throw new Exception($this->config('updateClientSql', 'erreur'));
+            throw new Exception($this->config('erreur', 'updateClientSql'));
         }
     }
 
