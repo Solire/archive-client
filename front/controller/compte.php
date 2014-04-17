@@ -19,9 +19,10 @@ namespace Client\Front\Controller;
  * @author     Adrien <aimbert@solire.fr>
  * @license    CC by-nc http://creativecommons.org/licenses/by-nc/3.0/fr/
  */
-class Compte extends \Client\Front\Controller\Main
+class Compte extends \App\Front\Controller\Main
 {
-    use \Client\Lib\TClient;
+    use \Client\Lib\ClientTrait,
+       \Slrfw\Formulaire\InstanceTrait;
 
     /**
      * Configuration de l'espace client
