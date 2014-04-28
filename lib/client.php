@@ -320,9 +320,9 @@ class Client
         }
 
         $query = 'UPDATE ' . $this->config('adresse', 'table') . ' '
-               . 'SET id_client = 0 '
+               . 'SET ' . $this->config('table', 'lienAdresseClient') . ' = 0 '
                . 'WHERE id = ' . $idAdresse . ' '
-               . ' AND id_client = ' . $this->id;
+               . ' AND ' . $this->config('table', 'lienAdresseClient') . ' = ' . $this->id;
 
         $this->db->exec($query);
 
@@ -340,13 +340,13 @@ class Client
     {
         $query = 'UPDATE ' . $this->config('adresse', 'table')
                . ' SET principal = 0 '
-               . 'WHERE id_client = ' . $this->id;
+               . 'WHERE ' . $this->config('table', 'lienAdresseClient') . ' = ' . $this->id;
         $this->db->exec($query);
 
         $query = 'UPDATE ' . $this->config('adresse', 'table')
                . ' SET principal = 1 '
                . 'WHERE id = ' . $idAdresse
-               . ' AND id_client = ' . $this->id;
+               . ' AND ' . $this->config('table', 'lienAdresseClient') . ' = ' . $this->id;
         $this->db->exec($query);
     }
 
@@ -413,7 +413,7 @@ class Client
 
         $query = 'SELECT * '
                . 'FROM '  . $this->config('table', 'adresse') . ' a '
-               . 'WHERE client_id = ' . $this->id;
+               . 'WHERE ' . $this->config('table', 'lienAdresseClient') . ' = ' . $this->id;
         $info['adresses'] = $this->db->query($query)->fetchAll(\PDO::FETCH_ASSOC);
 
         $this->setInfo($info);
@@ -433,7 +433,7 @@ class Client
     {
         $query = 'INSERT INTO client_historique SET '
                . ' message = ' . $this->db->quote($message) . ', '
-               . ' client_id = ' . $this->id . ', '
+               . ' ' . $this->config('table', 'lienAdresseClient') . ' = ' . $this->id . ', '
                . ' date_creation = NOW() ';
 
         if (!empty($date)) {
