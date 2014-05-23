@@ -11,6 +11,8 @@
 
 namespace Client\Front\Controller;
 
+use Slrfw\Message;
+
 /**
  * Module des comptes utilisateur
  *
@@ -76,7 +78,7 @@ class Compte extends \App\Front\Controller\Main
         $client->disconnect();
 
         $url = $this->config->get('url', 'afterdeco');
-        $this->redirect($url, null);
+        $this->simpleRedirect((string) $url, true);
     }
 
     /**
@@ -118,9 +120,9 @@ class Compte extends \App\Front\Controller\Main
         $form->run();
 
         $query = 'SELECT id '
-               . 'FROM ' . $this->config('table', 'client') . ' c '
+               . 'FROM ' . $this->config->get('table', 'client') . ' c '
                . 'WHERE email = ' . $this->_db->quote($form->email) . ' ';
-        $id = $this->_db->query($query)->fetch(PDO::FETCH_COLUMN);
+        $id = $this->_db->query($query)->fetch(\PDO::FETCH_COLUMN);
 
         if (!empty($id)) {
 
@@ -135,18 +137,20 @@ class Compte extends \App\Front\Controller\Main
 
             /* = Envois du mot de passe
               ------------------------------- */
-            $mail = new Mail('mdp.perdu');
-            $mail->to = $form->email;
+            $mail = new \Slrfw\Mail('mdp.perdu');
+            $mail->to = $form->mail;
             $mail->subject = $this->_view->_('Voici votre nouveau mot de passe');
             $mail->mdp = $password;
-
+            echo $password;
             $mail->send();
 
-            $phrase = 'Un email a été envoyé avec votre nouveau mot de passe.';
-            $this->_message($phrase);
+            $phrase = 'Un email vous a été envoyé.';
+            $message = new Message($this->_view->_($phrase));
+            $message->addRedirect('/', 2);
+            $message->display();
             return true;
         } else {
-            $phrase = "Votre adresse email n'est pas enregistré dans notre boutique.";
+            $phrase = "Un email vous a été envoyé.";
             $this->_message($phrase);
         }
     }
@@ -185,7 +189,7 @@ class Compte extends \App\Front\Controller\Main
 
         $phrase = 'Modifications correctement enregistrées';
         $message = new Message($this->_view->_($phrase));
-        $message->addRedirect('compte/edition.html', 2);
+        $message->addRedirect('compte/', 2);
         $message->display();
     }
 
