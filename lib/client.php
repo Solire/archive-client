@@ -8,11 +8,11 @@
 
 namespace Client\Lib;
 
-use \Slrfw\Exception\Lib as Exception;
-use \Slrfw\Exception\User as UserException;
-use \Slrfw\Registry;
-use \Slrfw\FrontController;
-use \Slrfw\Config;
+use \Slrfw\Exception\Lib as Exception,
+    \Slrfw\Exception\User as UserException,
+    \Slrfw\Registry,
+    \Slrfw\FrontController,
+    \Slrfw\Config;
 
 /**
  * Fonctionnalités de base d'un client
@@ -36,7 +36,7 @@ class Client
      * Configuration du module client
      * @var Config
      */
-    private $config = null;
+    protected $config = null;
 
     /**
      * Id du client
@@ -48,8 +48,13 @@ class Client
      * Données du client
      * @var array
      */
-    private $info = array();
+    protected $info = array();
 
+    /**
+     * Connection à la BDD
+     * @var \Slrfw\MyPDO
+     */
+    protected $db = null;
 
     /**
      * Donne un identifiant à l'objet
@@ -157,12 +162,12 @@ class Client
             throw new Exception($this->config('insertClientNoData', 'erreur'));
         }
 
-        /** Ajout de la date d'inscription **/
+        /* Ajout de la date d'inscription */
         if (in_array('time_inscription', $archi)) {
             $set[] = 'time_inscription = NOW()';
         }
 
-        /** Création du code client **/
+        /* Création du code client */
         if (in_array('code', $archi)) {
             $code = $this->generateCodeClient($data);
             $set[] = 'code = ' . $this->db->quote($code);
@@ -313,8 +318,9 @@ class Client
             throw new Exception($this->config('noAdresse', 'erreur'));
         }
 
-        /* = Blocage de la suppression des adresses principales
-          ------------------------------- */
+        /*
+         * Blocage de la suppression des adresses principales
+         */
         if ((int)$main == 1 && !in_array(self::FORCE, $opt)) {
             throw new UserException($this->config('supprPrinc', 'erreur'));
         }
@@ -368,8 +374,9 @@ class Client
 
             $foo = ord($value);
 
-            /* = On remplace par des booleans
-              ------------------------------- */
+            /*
+             * On remplace par des booleans
+             */
             if ($foo === 1) {
                 $data[$key] = true;
             } else {
@@ -390,8 +397,9 @@ class Client
      */
     public function setInfo($info)
     {
-        /* = Convertion des champs BIT
-          ------------------------------- */
+        /*
+         * Convertion des champs BIT
+         */
         $champs = array('actif');
         $info = $this->convertionBit($info, $champs);
 
