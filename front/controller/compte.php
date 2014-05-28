@@ -95,15 +95,20 @@ class Compte extends \App\Front\Controller\Main
         list($mail, $password) = $form->run(\Slrfw\Formulaire::FORMAT_LIST);
 
         $client = new \Slrfw\Session('client');
-        $client->connect($mail, $password);
-
-        if (isset($form->url)) {
-            $message = new \Slrfw\Message($this->_view->_('Connexion Ok'));
-            $message->addRedirect($form->url, 1);
-            $message->display();
-        } else {
-            $this->redirect('compte', null);
+        try {
+            $client->connect($mail, $password);
+        } catch (\Slrfw\Exception\User $exc) {
+            $exc->setErrorInputName($form->getInputNamesList());
+            throw $exc;
         }
+
+        $message = new \Slrfw\Message($this->_view->_('Connexion Ok'));
+        if (isset($form->url)) {
+            $message->addRedirect($form->url, 1);
+        } else {
+            $message->addRedirect('compte/', 1);
+        }
+        $message->display();
     }
 
     /**
