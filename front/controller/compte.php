@@ -130,7 +130,6 @@ class Compte extends \App\Front\Controller\Main
         $id = $this->_db->query($query)->fetch(\PDO::FETCH_COLUMN);
 
         if (!empty($id)) {
-
             /* = Enregistrement du nouveau mot de passe
               ------------------------------- */
             $data = array();
@@ -143,9 +142,9 @@ class Compte extends \App\Front\Controller\Main
             /* = Envois du mot de passe
               ------------------------------- */
             $mail = new \Slrfw\Mail('mdp.perdu');
-            $mail->to = $form->mail;
+            $mail->to = $form->email;
             $mail->subject = $this->_view->_('Voici votre nouveau mot de passe');
-            $mail->mdp = $password;
+            $mail->password = $password;
             $mail->send();
         }
         $phrase = 'Un email vous a été envoyé.';
