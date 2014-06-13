@@ -146,18 +146,11 @@ class Compte extends \App\Front\Controller\Main
             $mail->to = $form->mail;
             $mail->subject = $this->_view->_('Voici votre nouveau mot de passe');
             $mail->mdp = $password;
-            echo $password;
             $mail->send();
-
-            $phrase = 'Un email vous a été envoyé.';
-            $message = new Message($this->_view->_($phrase));
-            $message->addRedirect('/', 2);
-            $message->display();
-            return true;
-        } else {
-            $phrase = "Un email vous a été envoyé.";
-            $this->_message($phrase);
         }
+        $phrase = 'Un email vous a été envoyé.';
+        $message = new Message($this->_view->_($phrase));
+        $message->display();
     }
 
     /**
