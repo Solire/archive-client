@@ -159,7 +159,7 @@ class Client
         }
 
         if (empty($set)) {
-            throw new Exception($this->config('insertClientNoData', 'erreur'));
+            throw new Exception($this->config('erreur', 'insertClientNoData'));
         }
 
         /* Ajout de la date d'inscription */
@@ -310,22 +310,22 @@ class Client
         }
 
         $query = 'SELECT principal '
-               . 'FROM '. $this->config('adresse', 'table') . ' '
+               . 'FROM '. $this->config('table', 'adresse') . ' '
                . 'WHERE id = ' . $idAdresse . ' '
                . ' AND id_client = ' . $this->id;
         $main = $this->db->query($query)->fetch(\PDO::FETCH_COLUMN);
         if ($main === false) {
-            throw new Exception($this->config('noAdresse', 'erreur'));
+            throw new Exception($this->config('erreur', 'noAdresse'));
         }
 
         /*
          * Blocage de la suppression des adresses principales
          */
         if ((int)$main == 1 && !in_array(self::FORCE, $opt)) {
-            throw new UserException($this->config('supprPrinc', 'erreur'));
+            throw new UserException($this->config('erreur', 'supprPrinc'));
         }
 
-        $query = 'UPDATE ' . $this->config('adresse', 'table') . ' '
+        $query = 'UPDATE ' . $this->config('table', 'adresse') . ' '
                . 'SET ' . $this->config('table', 'lienAdresseClient') . ' = 0 '
                . 'WHERE id = ' . $idAdresse . ' '
                . ' AND ' . $this->config('table', 'lienAdresseClient') . ' = ' . $this->id;
@@ -344,12 +344,12 @@ class Client
      */
     public function setPrincipal($idAdresse)
     {
-        $query = 'UPDATE ' . $this->config('adresse', 'table')
+        $query = 'UPDATE ' . $this->config('table', 'adresse')
                . ' SET principal = 0 '
                . 'WHERE ' . $this->config('table', 'lienAdresseClient') . ' = ' . $this->id;
         $this->db->exec($query);
 
-        $query = 'UPDATE ' . $this->config('adresse', 'table')
+        $query = 'UPDATE ' . $this->config('table', 'adresse')
                . ' SET principal = 1 '
                . 'WHERE id = ' . $idAdresse
                . ' AND ' . $this->config('table', 'lienAdresseClient') . ' = ' . $this->id;

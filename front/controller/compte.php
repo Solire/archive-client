@@ -24,7 +24,7 @@ use Slrfw\Message;
 class Compte extends \App\Front\Controller\Main
 {
     use \Client\Lib\ClientTrait,
-       \Slrfw\Formulaire\InstanceTrait;
+        \Slrfw\Formulaire\InstanceTrait;
 
     /**
      * Configuration de l'espace client
