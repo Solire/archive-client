@@ -183,11 +183,11 @@ class Client
         } catch (\PDOException $exc) {
             $mask = "#Duplicate entry '([a-z0-9@\.\-]+)' for key '(.+)'#Ui";
             if (preg_match($mask, $exc->getMessage(), $match)) {
-                $message = $this->config('insertClientSqlDuplicate', 'erreur');
+                $message = $this->config('erreur', 'insertClientSqlDuplicate');
                 $message = sprintf($message, $match[2], $match[1]);
                 throw new UserException($message);
             } else {
-                throw new Exception($this->config('insertClientSql', 'erreur'));
+                throw new Exception($this->config('erreur', 'insertClientSql'));
             }
         }
 
