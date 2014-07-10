@@ -312,7 +312,7 @@ class Client
         $query = 'SELECT principal '
                . 'FROM '. $this->config('table', 'adresse') . ' '
                . 'WHERE id = ' . $idAdresse . ' '
-               . ' AND id_client = ' . $this->id;
+               . ' AND ' . $this->config('table', 'lienAdresseClient') .  ' = ' . $this->id;
         $main = $this->db->query($query)->fetch(\PDO::FETCH_COLUMN);
         if ($main === false) {
             throw new Exception($this->config('erreur', 'noAdresse'));
