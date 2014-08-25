@@ -8,11 +8,11 @@
 
 namespace Client\Lib;
 
-use \Slrfw\Exception\Lib as Exception;
-use \Slrfw\Exception\User as UserException;
-use \Slrfw\Registry;
-use \Slrfw\FrontController;
-use \Slrfw\Config;
+use \Slrfw\Exception\Lib as Exception,
+    \Slrfw\Exception\User as UserException,
+    \Slrfw\Registry,
+    \Slrfw\FrontController,
+    \Slrfw\Config;
 
 /**
  * Fonctionnalités de base d'un client
@@ -36,7 +36,7 @@ class Client
      * Configuration du module client
      * @var Config
      */
-    private $config = null;
+    protected $config = null;
 
     /**
      * Id du client
@@ -48,8 +48,13 @@ class Client
      * Données du client
      * @var array
      */
-    private $info = array();
+    protected $info = array();
 
+    /**
+     * Connection à la BDD
+     * @var \Slrfw\MyPDO
+     */
+    protected $db = null;
 
     /**
      * Donne un identifiant à l'objet
@@ -154,15 +159,15 @@ class Client
         }
 
         if (empty($set)) {
-            throw new Exception($this->config('insertClientNoData', 'erreur'));
+            throw new Exception($this->config('erreur', 'insertClientNoData'));
         }
 
-        /** Ajout de la date d'inscription **/
+        /* Ajout de la date d'inscription */
         if (in_array('time_inscription', $archi)) {
             $set[] = 'time_inscription = NOW()';
         }
 
-        /** Création du code client **/
+        /* Création du code client */
         if (in_array('code', $archi)) {
             $code = $this->generateCodeClient($data);
             $set[] = 'code = ' . $this->db->quote($code);
@@ -178,11 +183,11 @@ class Client
         } catch (\PDOException $exc) {
             $mask = "#Duplicate entry '([a-z0-9@\.\-]+)' for key '(.+)'#Ui";
             if (preg_match($mask, $exc->getMessage(), $match)) {
-                $message = $this->config('insertClientSqlDuplicate', 'erreur');
+                $message = $this->config('erreur', 'insertClientSqlDuplicate');
                 $message = sprintf($message, $match[2], $match[1]);
                 throw new UserException($message);
             } else {
-                throw new Exception($this->config('insertClientSql', 'erreur'));
+                throw new Exception($this->config('erreur', 'insertClientSql'));
             }
         }
 
@@ -220,11 +225,12 @@ class Client
      * @param array $data Tableau associatif de données du client
      *
      * @return void
+     * @todo revoir l'édition du mot de passe
      */
     public function update(array $data)
     {
         $query = 'DESC ' . $this->config('table', 'client') . ';';
-        $archi = $this->db->query($query)->fetchAll(PDO::FETCH_COLUMN, 0);
+        $archi = $this->db->query($query)->fetchAll(\PDO::FETCH_COLUMN, 0);
 
         $set = array();
         foreach ($data as $key => $value) {
@@ -237,17 +243,16 @@ class Client
         }
 
         if (empty($set)) {
-            throw new Exception($this->config('updateClientNoData', 'erreur'));
+            throw new Exception($this->config('erreur', 'updateClientNoData'));
         }
 
         $update = 'UPDATE ' . $this->config('table', 'client') . ' '
                 . 'SET ' . implode(', ', $set) . ' '
                 . 'WHERE id = ' . $this->id ;
-
         try {
             $this->db->exec($update);
         } catch (\PDOException $exc) {
-            throw new Exception($this->config('updateClientSql', 'erreur'));
+            throw new Exception($this->config('erreur', 'updateClientSql'));
         }
     }
 
@@ -305,24 +310,25 @@ class Client
         }
 
         $query = 'SELECT principal '
-               . 'FROM '. $this->config('adresse', 'table') . ' '
+               . 'FROM '. $this->config('table', 'adresse') . ' '
                . 'WHERE id = ' . $idAdresse . ' '
-               . ' AND id_client = ' . $this->id;
+               . ' AND ' . $this->config('table', 'lienAdresseClient') .  ' = ' . $this->id;
         $main = $this->db->query($query)->fetch(\PDO::FETCH_COLUMN);
         if ($main === false) {
-            throw new Exception($this->config('noAdresse', 'erreur'));
+            throw new Exception($this->config('erreur', 'noAdresse'));
         }
 
-        /* = Blocage de la suppression des adresses principales
-          ------------------------------- */
+        /*
+         * Blocage de la suppression des adresses principales
+         */
         if ((int)$main == 1 && !in_array(self::FORCE, $opt)) {
-            throw new UserException($this->config('supprPrinc', 'erreur'));
+            throw new UserException($this->config('erreur', 'supprPrinc'));
         }
 
-        $query = 'UPDATE ' . $this->config('adresse', 'table') . ' '
-               . 'SET id_client = 0 '
+        $query = 'UPDATE ' . $this->config('table', 'adresse') . ' '
+               . 'SET ' . $this->config('table', 'lienAdresseClient') . ' = 0 '
                . 'WHERE id = ' . $idAdresse . ' '
-               . ' AND id_client = ' . $this->id;
+               . ' AND ' . $this->config('table', 'lienAdresseClient') . ' = ' . $this->id;
 
         $this->db->exec($query);
 
@@ -338,15 +344,15 @@ class Client
      */
     public function setPrincipal($idAdresse)
     {
-        $query = 'UPDATE ' . $this->config('adresse', 'table')
+        $query = 'UPDATE ' . $this->config('table', 'adresse')
                . ' SET principal = 0 '
-               . 'WHERE id_client = ' . $this->id;
+               . 'WHERE ' . $this->config('table', 'lienAdresseClient') . ' = ' . $this->id;
         $this->db->exec($query);
 
-        $query = 'UPDATE ' . $this->config('adresse', 'table')
+        $query = 'UPDATE ' . $this->config('table', 'adresse')
                . ' SET principal = 1 '
                . 'WHERE id = ' . $idAdresse
-               . ' AND id_client = ' . $this->id;
+               . ' AND ' . $this->config('table', 'lienAdresseClient') . ' = ' . $this->id;
         $this->db->exec($query);
     }
 
@@ -368,8 +374,9 @@ class Client
 
             $foo = ord($value);
 
-            /* = On remplace par des booleans
-              ------------------------------- */
+            /*
+             * On remplace par des booleans
+             */
             if ($foo === 1) {
                 $data[$key] = true;
             } else {
@@ -390,8 +397,9 @@ class Client
      */
     public function setInfo($info)
     {
-        /* = Convertion des champs BIT
-          ------------------------------- */
+        /*
+         * Convertion des champs BIT
+         */
         $champs = array('actif');
         $info = $this->convertionBit($info, $champs);
 
@@ -413,7 +421,7 @@ class Client
 
         $query = 'SELECT * '
                . 'FROM '  . $this->config('table', 'adresse') . ' a '
-               . 'WHERE client_id = ' . $this->id;
+               . 'WHERE ' . $this->config('table', 'lienAdresseClient') . ' = ' . $this->id;
         $info['adresses'] = $this->db->query($query)->fetchAll(\PDO::FETCH_ASSOC);
 
         $this->setInfo($info);
@@ -433,7 +441,7 @@ class Client
     {
         $query = 'INSERT INTO client_historique SET '
                . ' message = ' . $this->db->quote($message) . ', '
-               . ' client_id = ' . $this->id . ', '
+               . ' ' . $this->config('table', 'lienAdresseClient') . ' = ' . $this->id . ', '
                . ' date_creation = NOW() ';
 
         if (!empty($date)) {

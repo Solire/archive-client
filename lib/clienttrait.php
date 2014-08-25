@@ -16,7 +16,7 @@ use Slrfw\Exception\HttpError as Exception;
  * @author  Adrien <aimbert@solire.fr>
  * @license CC by-nc http://creativecommons.org/licenses/by-nc/3.0/fr/
  */
-trait TClient
+trait ClientTrait
 {
     /**
      * Charge le compte courent
