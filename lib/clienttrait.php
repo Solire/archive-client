@@ -32,7 +32,10 @@ trait ClientTrait
         if (!$session->isConnected()) {
             if ($displayError === true) {
                 $exc = new Exception('Aucune session de disponible');
-                $exc->http(401);
+                $exc->http(
+                    401,
+                    \Slrfw\FrontController::$envConfig->get('base', 'url')
+                );
                 throw $exc;
             }
             return false;
