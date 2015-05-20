@@ -71,6 +71,8 @@ class Client
         }
 
         $this->id = $id;
+
+        return $this;
     }
 
     /**
