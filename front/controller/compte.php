@@ -1,59 +1,58 @@
 <?php
-/**
- * Module des comptes utilisateur
- *
- * @package    Controller
- * @subpackage Front
- * @author     Adrien <aimbert@solire.fr>
- * @license    CC by-nc http://creativecommons.org/licenses/by-nc/3.0/fr/
- * @filesource
- */
 
-namespace Client\Front\Controller;
+namespace Client\front\controller;
 
+use App\Front\Controller\Main;
+use Client\Lib\ClientTrait;
+use PDO;
+use Projet\lib\Client;
+use Slrfw\Config;
+use Slrfw\Exception\User;
+use Slrfw\Formulaire;
+use Slrfw\Formulaire\InstanceTrait;
+use Slrfw\FrontController;
+use Slrfw\Mail;
 use Slrfw\Message;
+use Slrfw\Session;
 
 /**
- * Module des comptes utilisateur
+ * Module des comptes utilisateur.
  *
- * @package    Controller
- * @subpackage Front
- * @author     Adrien <aimbert@solire.fr>
- * @license    CC by-nc http://creativecommons.org/licenses/by-nc/3.0/fr/
+ * @author  Adrien <aimbert@solire.fr>
+ * @license CC by-nc http://creativecommons.org/licenses/by-nc/3.0/fr/
  */
-class Compte extends \App\Front\Controller\Main
+class Compte extends Main
 {
-    use \Client\Lib\ClientTrait,
-        \Slrfw\Formulaire\InstanceTrait;
+    use ClientTrait;
+    use InstanceTrait;
 
     /**
-     * Configuration de l'espace client
+     * Configuration de l'espace client.
      *
-     * @var \Slrfw\Config
+     * @var Config
      */
     protected $config;
 
     /**
-     * Chargement de la configuration client
+     * Chargement de la configuration client.
      *
      * @return void
-     * @ignore
      */
     public function start()
     {
         parent::start();
 
-        $path = \Slrfw\FrontController::search('config/client.ini', false);
-        $this->config = new \Slrfw\Config($path);
+        $path = FrontController::search('config/client.ini', false);
+        $this->config = new Config($path);
 
-        $this->_view->breadCrumbs[] = array(
+        $this->_view->breadCrumbs[] = [
             'label' => $this->config->get('noms', 'espace'),
-            'url'   => 'compte/'
-        );
+            'url' => 'compte/',
+        ];
     }
 
     /**
-     * Page d'accueil de l'espace compte
+     * Page d'accueil de l'espace compte.
      *
      * @return void
      * @page Page d'acceuil de l'espace client
@@ -66,7 +65,7 @@ class Compte extends \App\Front\Controller\Main
     }
 
     /**
-     * Déconnexion du client
+     * Déconnexion du client.
      *
      * @return void
      */
@@ -74,7 +73,7 @@ class Compte extends \App\Front\Controller\Main
     {
         $this->_view->enable(false);
 
-        $client = new \Slrfw\Session('client');
+        $client = new Session('client');
         $client->disconnect();
 
         $url = $this->config->get('url', 'afterdeco');
@@ -82,7 +81,7 @@ class Compte extends \App\Front\Controller\Main
     }
 
     /**
-     * Connexion d'un nouvel utilisateur
+     * Connexion d'un nouvel utilisateur.
      *
      * @return void
      */
@@ -92,17 +91,17 @@ class Compte extends \App\Front\Controller\Main
 
         $form = $this->chargeForm('connexion.form.ini');
 
-        list($mail, $password) = $form->run(\Slrfw\Formulaire::FORMAT_LIST);
+        list($mail, $password) = $form->run(Formulaire::FORMAT_LIST);
 
-        $client = new \Slrfw\Session('client');
+        $client = new Session('client');
         try {
             $client->connect($mail, $password);
-        } catch (\Slrfw\Exception\User $exc) {
+        } catch (User $exc) {
             $exc->setErrorInputName($form->getInputNamesList());
             throw $exc;
         }
 
-        $message = new \Slrfw\Message($this->_view->_('Connexion Ok'));
+        $message = new Message($this->_view->_('Connexion Ok'));
         if (isset($form->url)) {
             $message->addRedirect($form->url, 1);
         } else {
@@ -112,7 +111,7 @@ class Compte extends \App\Front\Controller\Main
     }
 
     /**
-     * Génère un nouveau mot de passe pour l'utilisateur et lui envois par mail
+     * Génère un nouveau mot de passe pour l'utilisateur et lui envois par mail.
      *
      * @return void
      * @mail Mot de passe perdu
@@ -127,21 +126,19 @@ class Compte extends \App\Front\Controller\Main
         $query = 'SELECT id '
                . 'FROM ' . $this->config->get('table', 'client') . ' c '
                . 'WHERE email = ' . $this->_db->quote($form->email) . ' ';
-        $id = $this->_db->query($query)->fetch(\PDO::FETCH_COLUMN);
+        $id = $this->_db->query($query)->fetch(PDO::FETCH_COLUMN);
 
         if (!empty($id)) {
-            /* = Enregistrement du nouveau mot de passe
-              ------------------------------- */
-            $data = array();
-            $password = \Slrfw\Session::makePass();
+            /* Enregistrement du nouveau mot de passe */
+            $data = [];
+            $password = Session::makePass();
             $data[$this->config->get('table', 'colPassword')] = $password;
-            $className = \Slrfw\FrontController::searchClass('Lib\Client');
+            $className = FrontController::searchClass('Lib\Client');
             $client = new $className($id);
             $client->update($data);
 
-            /* = Envois du mot de passe
-              ------------------------------- */
-            $mail = new \Slrfw\Mail('mdp.perdu');
+            /* Envois du mot de passe */
+            $mail = new Mail('mdp.perdu');
             $mail->to = $form->email;
             $mail->subject = $this->_view->_('Voici votre nouveau mot de passe');
             $mail->password = $password;
@@ -153,7 +150,7 @@ class Compte extends \App\Front\Controller\Main
     }
 
     /**
-     * Formulaire d'edition du compte
+     * Formulaire d'edition du compte.
      *
      * @return void
      * @page Formulaire d'édition du compte client
@@ -163,14 +160,14 @@ class Compte extends \App\Front\Controller\Main
         $client = $this->chargeCompte();
         $this->_view->client = $client->getInfo();
 
-        $this->_view->breadCrumbs[] = array(
+        $this->_view->breadCrumbs[] = [
             'label' => 'edition',
-            'url'   => 'compte/edition.html'
-        );
+            'url' => 'compte/edition.html',
+        ];
     }
 
     /**
-     * Enregistrement de l'édition d'un compte
+     * Enregistrement de l'édition d'un compte.
      *
      * @return void
      */
@@ -191,43 +188,44 @@ class Compte extends \App\Front\Controller\Main
     }
 
     /**
-     * Formulaire d'inscription
+     * Formulaire d'inscription.
      *
      * @return void
      * @page Inscription utilisateur
      */
     public function inscriptionAction()
     {
-        /* = Fils d'ariane
-          ------------------------------- */
-        $this->_view->breadCrumbs[] = array(
+        /* Fils d'ariane */
+        $this->_view->breadCrumbs[] = [
             'label' => $this->_view->_('inscription'),
-            'url'   => ''
-        );
+            'url' => '',
+        ];
     }
 
     /**
-     * Création d'un nouveau compte
+     * Création d'un nouveau compte.
      *
      * @return void
+     *
      * @todo mep les envois de mail
      */
     public function enregistrementAction()
     {
         $this->_view->enable(false);
 
-        /** Chargement du formulaire **/
+        /* Chargement du formulaire */
         $formCompte = $this->chargeForm('client.form.ini');
         $infoClient = $formCompte->run();
 
-        /** Chargement de la class Client **/
-        $className = \Slrfw\FrontController::searchClass('Lib\Client', false);
+        /* Chargement de la class Client */
+        $className = FrontController::searchClass('Lib\Client', false);
+
+        /* @var $client Client */
         $client = new $className();
 
-        /** Enregistrement **/
+        /* Enregistrement */
         $client->enreg($infoClient);
 
         $this->redirect('compte', null);
     }
 }
-
